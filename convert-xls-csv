@@ -1,0 +1,25 @@
+from pathlib import Path
+import pandas as pd
+
+# Pasta onde estão os arquivos Excel
+pasta = Path(r"C:\Users\Antonio Scardua\Downloads\OS 1012_ JAN 2025\OS 1012_ JAN 2025")
+
+# Percorre todos os arquivos .xlsx
+for arquivo in pasta.glob("*.xlsx"):
+
+    # Lê o Excel
+    df = pd.read_excel(arquivo)
+
+    # Cria o caminho do CSV com o mesmo nome
+    arquivo_csv = arquivo.with_suffix(".csv")
+
+    # Salva como CSV
+    df.to_csv(
+        arquivo_csv,
+        index=False,
+        encoding="utf-8-sig"
+    )
+
+    print(f"Convertido: {arquivo.name} -> {arquivo_csv.name}")
+
+print("Conversão concluída!")
