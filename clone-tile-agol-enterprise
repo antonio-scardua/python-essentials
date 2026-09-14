@@ -1,0 +1,50 @@
+from arcgis.gis import GIS
+
+# ---------------------------------------------------------
+# CONEXÕES
+# ---------------------------------------------------------
+
+agol = GIS(
+    "https://www.arcgis.com",
+    #"X",
+    #"X"
+)
+
+enterprise = GIS(
+    "https://arcgis-fest.org/portal",
+    #"X",
+    #"X"
+)
+
+# ---------------------------------------------------------
+# ITEM DO ARCGIS ONLINE
+# ---------------------------------------------------------
+
+#item_id = "X"
+
+item = agol.content.get(item_id)
+
+print("Título:", item.title)
+print("Tipo:", item.type)
+print("URL original:", item.url)
+
+# ---------------------------------------------------------
+# CLONAR
+# ---------------------------------------------------------
+
+clonados = enterprise.content.clone_items(
+    items=[item],
+    copy_data=True,
+    search_existing_items=False
+)
+
+# ---------------------------------------------------------
+# RESULTADO
+# ---------------------------------------------------------
+
+for novo_item in clonados:
+    print("--------------------------")
+    print("Título:", novo_item.title)
+    print("Tipo:", novo_item.type)
+    print("ID:", novo_item.id)
+    print("URL:", novo_item.url)
