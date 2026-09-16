@@ -1,0 +1,171 @@
+from arcgis.gis import GIS
+import pandas as pd
+
+# =========================================================
+# CONEXÕES
+# =========================================================
+
+agol = GIS(
+    "https://www.arcgis.com",
+    # "X",
+    # "X"
+)
+
+enterprise = GIS(
+    "https://arcgis-fest.org/portal",
+    # "X",
+    # "X"
+)
+
+print("Conectado ao AGOL:", agol.users.me.username)
+print("Conectado ao Enterprise:", enterprise.users.me.username)
+
+
+# =========================================================
+# IDS DOS TILE MAPS / MAP SERVICES NO AGOL
+# =========================================================
+
+item_ids = [
+   # "X",
+   # "X",
+   # "X",
+   # "X",
+]
+
+
+# =========================================================
+# RESULTADOS
+# =========================================================
+
+resultados = []
+
+
+# =========================================================
+# CLONAGEM
+# =========================================================
+
+for i, item_id in enumerate(item_ids, start=1):
+
+    print("\n" + "=" * 70)
+    print(f"[{i}/{len(item_ids)}] Processando: {item_id}")
+    print("=" * 70)
+
+    try:
+
+        item = agol.content.get(item_id)
+
+        if item is None:
+            print("ERRO: item não encontrado no AGOL")
+
+            resultados.append({
+                "ID_AGOL": item_id,
+                "Titulo": "",
+                "Tipo": "",
+                "Status": "ERRO",
+                "ID_Enterprise": "",
+                "URL_Enterprise": "",
+                "Mensagem": "Item não encontrado"
+            })
+
+            continue
+
+
+        print("Título:", item.title)
+        print("Tipo:", item.type)
+        print("URL original:", item.url)
+
+
+        # -------------------------------------------------
+        # CLONAR
+        # -------------------------------------------------
+
+        clonados = enterprise.content.clone_items(
+            items=[item],
+            copy_data=True,
+            search_existing_items=False
+        )
+
+
+        servico_principal = None
+
+
+        # -------------------------------------------------
+        # MOSTRAR ITENS CRIADOS
+        # -------------------------------------------------
+
+        for novo_item in clonados:
+
+            print("\nItem criado:")
+            print("Título:", novo_item.title)
+            print("Tipo:", novo_item.type)
+            print("ID:", novo_item.id)
+            print("URL:", novo_item.url)
+
+            if novo_item.type in [
+                "Map Service",
+                "Tile Layer",
+                "Vector Tile Service"
+            ]:
+                servico_principal = novo_item
+
+
+        # -------------------------------------------------
+        # RESULTADO
+        # -------------------------------------------------
+
+        if servico_principal:
+
+            resultados.append({
+                "ID_AGOL": item.id,
+                "Titulo": item.title,
+                "Tipo": item.type,
+                "Status": "SUCESSO",
+                "ID_Enterprise": servico_principal.id,
+                "URL_Enterprise": servico_principal.url,
+                "Mensagem": ""
+            })
+
+            print("\n>>> MIGRADO COM SUCESSO")
+
+        else:
+
+            resultados.append({
+                "ID_AGOL": item.id,
+                "Titulo": item.title,
+                "Tipo": item.type,
+                "Status": "ATENÇÃO",
+                "ID_Enterprise": "",
+                "URL_Enterprise": "",
+                "Mensagem": "Clone criado, mas serviço principal não identificado"
+            })
+
+            print("\n>>> ATENÇÃO: serviço principal não identificado")
+
+
+    except Exception as e:
+
+        print("\n>>> ERRO")
+        print(str(e))
+
+        resultados.append({
+            "ID_AGOL": item_id,
+            "Titulo": item.title if 'item' in locals() and item else "",
+            "Tipo": item.type if 'item' in locals() and item else "",
+            "Status": "ERRO",
+            "ID_Enterprise": "",
+            "URL_Enterprise": "",
+            "Mensagem": str(e)
+        })
+
+
+# =========================================================
+# RESUMO
+# =========================================================
+
+df = pd.DataFrame(resultados)
+
+print("\n" + "=" * 70)
+print("RESUMO DA MIGRAÇÃO")
+print("=" * 70)
+
+display(df)
